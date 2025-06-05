@@ -12,12 +12,11 @@ import java.util.concurrent.Executors;
 
 public class ChatWindow extends JFrame {
     private final JTextArea chatArea = new JTextArea();
-    private final JTextField inputField = new JTextField();
+    private final PlaceholderTextField inputField = new PlaceholderTextField();
     private final JButton sendButton = new JButton("Send");
     private final JButton leaveButton = new JButton("Leave");
     private final DefaultListModel<String> userListModel = new DefaultListModel<>();
     private final JList<String> userList = new JList<>(userListModel);
-    private final JPanel bottomPanel = new JPanel();
     public static final String GREEN = "\033[0;32m";
     public static final String RESET = "\033[0m";
 
@@ -31,15 +30,26 @@ public class ChatWindow extends JFrame {
         this.producer = new ChatProducer("localhost:9092");
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
-        setTitle("Chatroom: " + topic + " - User: " + username);
-        setSize(800, 600);
-        setLayout(new BorderLayout());
+        setTitle("Room: " + topic);
+        setSize(1000, 800);
+        setLocationRelativeTo(null);
 
+        ImageIcon backgroundIcon = new ImageIcon("src/main/java/com/example/GUI/images/bg3.jpg");
+        Image backgroundImage = backgroundIcon.getImage();
+
+        JPanel backgroundPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+            }
+        };
+        backgroundPanel.setLayout(new BorderLayout());
+        setContentPane(backgroundPanel);
 
         setupUI();
         startListening();
         producer.sendMessage(topic, "JOIN::" + username + "::");
-
 
         setVisible(true);
 
@@ -48,51 +58,98 @@ public class ChatWindow extends JFrame {
                 leaveRoom();
             }
         });
-
     }
+
 
     private void setupUI() {
         chatArea.setEditable(false);
         chatArea.setLineWrap(true);
         chatArea.setWrapStyleWord(true);
+        chatArea.setForeground(Color.WHITE);
+        chatArea.setBackground(new Color(2, 32, 42));
+        chatArea.setFont(new Font("Monospaced", Font.PLAIN, 16));
+
         JScrollPane chatScroll = new JScrollPane(chatArea);
-        add(chatScroll, BorderLayout.CENTER);
+        chatScroll.setOpaque(false);
+        chatScroll.getViewport().setOpaque(false);
+
+        inputField.setPlaceholder("Enter your message here");
+        inputField.setBackground(new Color(2, 32, 42));
+        inputField.setForeground(Color.WHITE);
+        inputField.setFont(new Font("Monospaced", Font.PLAIN, 16));
+
+        sendButton.setBackground(new Color(2, 32, 42));
+        sendButton.setForeground(Color.WHITE);
+        sendButton.setFont(new Font("Monospaced", Font.PLAIN, 16));
+        sendButton.setPreferredSize(new Dimension(100, 70));
 
         JPanel inputPanel = new JPanel(new BorderLayout());
+        inputPanel.setOpaque(false);
         inputPanel.add(inputField, BorderLayout.CENTER);
         inputPanel.add(sendButton, BorderLayout.EAST);
-        inputPanel.setPreferredSize(new Dimension(600, 60));
+        inputPanel.setPreferredSize(new Dimension(0, 70));
 
-        userListModel.addElement(username);
-        JScrollPane userScroll = new JScrollPane(userList);
+        JPanel chatPanel = new JPanel(new BorderLayout());
+        chatPanel.setOpaque(false);
+        chatPanel.add(chatScroll, BorderLayout.CENTER);
+        chatPanel.add(inputPanel, BorderLayout.SOUTH);
+        chatPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
         userList.setCellRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
                 if (value.toString().equals(username)) {
-                    c.setForeground(Color.GREEN);
+                    label.setForeground(Color.GREEN);
                 } else {
-                    c.setForeground(Color.BLACK);
+                    label.setForeground(Color.WHITE);
                 }
-                return c;
+                if (isSelected) {
+                    label.setBackground(new Color(40, 60, 80)); // Kolor zaznaczonego elementu
+                } else {
+                    label.setBackground(new Color(2, 32, 42));  // Kolor tła listy
+                }
+                label.setOpaque(true);
+                return label;
             }
         });
-        userScroll.setPreferredSize(new Dimension(100, 0));
-        add(userScroll, BorderLayout.EAST);
+        userList.setBackground(new Color(2, 32, 42));
 
-        leaveButton.setPreferredSize(new Dimension(100, 60));
 
-        add(bottomPanel, BorderLayout.SOUTH);
-        bottomPanel.add(leaveButton, BorderLayout.WEST);
-        bottomPanel.add(inputPanel, BorderLayout.CENTER);
+        JScrollPane userScroll = new JScrollPane(userList);
+        userScroll.setOpaque(false);
+        userScroll.getViewport().setOpaque(false);
+
+        JLabel userLabel = new JLabel("Active users:", SwingConstants.CENTER);
+        userLabel.setForeground(Color.WHITE);
+        userLabel.setFont(new Font("Monospaced", Font.PLAIN, 16));
+
+        leaveButton.setPreferredSize(new Dimension(200, 70));
+        leaveButton.setBackground(new Color(99, 12, 12));
+        leaveButton.setForeground(Color.WHITE);
+        leaveButton.setFont(new Font("Monospaced", Font.PLAIN, 16));
+
+        JPanel userPanel = new JPanel(new BorderLayout());
+        userPanel.setOpaque(false);
+        userPanel.setPreferredSize(new Dimension(200, 0));
+        userPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        userPanel.add(userLabel, BorderLayout.NORTH);
+        userPanel.add(userScroll, BorderLayout.CENTER);
+        userPanel.add(leaveButton, BorderLayout.SOUTH);
+
+        add(chatPanel, BorderLayout.CENTER);
+        add(userPanel, BorderLayout.EAST);
 
         sendButton.addActionListener(e -> sendMessage());
         inputField.addActionListener(e -> sendMessage());
         leaveButton.addActionListener(e -> leaveRoom());
-
     }
 
-    private void sendMessage() {
+
+
+    private void sendMessage()
+    {
         String text = inputField.getText().trim();
         if (!text.isEmpty()) {
             String message = "MSG::" + username + "::" + text;
@@ -101,7 +158,8 @@ public class ChatWindow extends JFrame {
         }
     }
 
-    private void startListening() {
+    private void startListening()
+    {
         String groupID = username + "-" + System.currentTimeMillis();
         ChatConsumer consumer = new ChatConsumer("localhost:9092", topic, groupID);
         Executors.newSingleThreadExecutor().submit(() -> {
@@ -150,7 +208,7 @@ public class ChatWindow extends JFrame {
     private void leaveRoom() {
         int option = JOptionPane.showConfirmDialog(
                 this,
-                "Czy na pewno chcesz opuścić pokój?",
+                "Do you really wanna leave the room?",
                 "Exit",
                 JOptionPane.YES_NO_OPTION
         );
