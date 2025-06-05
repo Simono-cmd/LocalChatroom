@@ -110,6 +110,7 @@ public class ChatWindow extends JFrame {
                 } else {
                     label.setBackground(new Color(2, 32, 42));  // Kolor tła listy
                 }
+                label.setFont(new Font("Monospaced", Font.PLAIN, 20));
                 label.setOpaque(true);
                 return label;
             }

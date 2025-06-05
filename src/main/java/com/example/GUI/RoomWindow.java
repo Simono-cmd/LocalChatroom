@@ -4,7 +4,6 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedWriter;
@@ -19,7 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class RoomWindow extends JFrame {
-    private static final Object ROOMS_FILE = "src/main/java/com/example/GUI/rooms.txt";
+    private static final String ROOMS_FILE = "src/main/java/com/example/GUI/rooms.txt";
     private String username;
     private final JPanel roomPanel = new JPanel();
     private List<String> rooms = new ArrayList<>();
@@ -32,12 +31,15 @@ public class RoomWindow extends JFrame {
             System.exit(0);
             return;
         }
-        new RoomWindow(username);
+        initializeUI();
     }
 
     public RoomWindow(String username) {
         this.username = username;
+        initializeUI();
+    }
 
+    private void initializeUI() {
         ImageIcon backgroundIcon = new ImageIcon("src/main/java/com/example/GUI/images/bg2.jpeg");
         Image backgroundImage = backgroundIcon.getImage();
 
@@ -58,7 +60,7 @@ public class RoomWindow extends JFrame {
 
         roomPanel.setOpaque(false);
         roomPanel.setLayout(new FlowLayout());
-        roomPanel.setBorder(new EmptyBorder(40, 40, 40, 40));
+        roomPanel.setBorder(new EmptyBorder(60, 40, 40, 40));
         rooms = loadRoomsFromFile();
         if (rooms.isEmpty()) {
             rooms = new ArrayList<>(Arrays.asList("General", "Java", "Test"));
@@ -70,19 +72,23 @@ public class RoomWindow extends JFrame {
 
         backgroundPanel.add(roomPanel, BorderLayout.CENTER);
 
-        JPanel bottomPanel = new JPanel(new FlowLayout());
+        // Dolny pasek z polami i przyciskami
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         bottomPanel.setOpaque(false);
+
         PlaceholderTextField newRoomField = new PlaceholderTextField();
         newRoomField.setPlaceholder("Enter room name");
         newRoomField.setPreferredSize(new Dimension(200, 30));
         newRoomField.setFont(new Font("Monospaced", Font.PLAIN, 16));
         newRoomField.setBackground(new Color(2, 32, 42));
         newRoomField.setForeground(Color.WHITE);
+
         JButton addRoomButton = new JButton("Add Room");
         addRoomButton.setFont(new Font("Monospaced", Font.PLAIN, 16));
         addRoomButton.setBackground(new Color(2, 32, 42));
         addRoomButton.setForeground(Color.WHITE);
         getRootPane().setDefaultButton(addRoomButton);
+
         addRoomButton.addActionListener(e -> {
             String roomName = newRoomField.getText().trim();
 
@@ -102,11 +108,30 @@ public class RoomWindow extends JFrame {
             saveRoomsToFile();
         });
 
-
         bottomPanel.add(newRoomField);
         bottomPanel.add(addRoomButton);
-        backgroundPanel.add(bottomPanel, BorderLayout.SOUTH);
 
+        JPanel bottomWrapper = new JPanel(new BorderLayout());
+        bottomWrapper.setOpaque(false);
+        bottomWrapper.setBorder(new EmptyBorder(10, 10, 10, 10));
+        bottomWrapper.add(bottomPanel, BorderLayout.WEST);
+
+        JButton logoutButton = new JButton("Logout");
+        logoutButton.setFont(new Font("Monospaced", Font.PLAIN, 16));
+        logoutButton.setBackground(new Color(2, 32, 42));
+        logoutButton.setForeground(Color.WHITE);
+        logoutButton.setBackground(new Color(94, 0, 0));
+        logoutButton.addActionListener(e -> {
+            dispose();
+            new RoomWindow(); // wraca do loginu
+        });
+
+        JPanel logoutPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        logoutPanel.setOpaque(false);
+        logoutPanel.add(logoutButton);
+        bottomWrapper.add(logoutPanel, BorderLayout.EAST);
+
+        backgroundPanel.add(bottomWrapper, BorderLayout.SOUTH);
 
         setVisible(true);
     }
@@ -163,7 +188,7 @@ public class RoomWindow extends JFrame {
 
     private List<String> loadRoomsFromFile() {
         try {
-            Path path = Paths.get((String) ROOMS_FILE);
+            Path path = Paths.get(ROOMS_FILE);
             if (!Files.exists(path)) {
                 return new ArrayList<>();
             }
@@ -178,7 +203,7 @@ public class RoomWindow extends JFrame {
     }
 
     private void saveRoomsToFile() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(String.valueOf(ROOMS_FILE)))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(ROOMS_FILE))) {
             for (String room : rooms) {
                 writer.write(room);
                 writer.newLine();
@@ -187,5 +212,4 @@ public class RoomWindow extends JFrame {
             e.printStackTrace();
         }
     }
-
 }
