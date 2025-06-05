@@ -10,9 +10,6 @@ public class PlaceholderTextField extends JTextField {
         super();
     }
 
-    public PlaceholderTextField(int columns) {
-        super(columns);
-    }
 
 
     public void setPlaceholder(String placeholder) {
