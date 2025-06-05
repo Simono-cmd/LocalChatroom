@@ -1,7 +1,7 @@
 services:
   kafka:
     image: bitnami/kafka:latest
-    container_name: kafka
+    container_name: LocalChatroom
     ports:
       - "9092:9092"
     environment:

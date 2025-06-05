@@ -1,4 +1,4 @@
-package com.example;
+package com.example.Kafka;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -9,6 +9,7 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class ChatConsumer {
     private KafkaConsumer<String, String> consumer;
@@ -29,13 +30,13 @@ public class ChatConsumer {
 
     }
 
-    public void listen() {
+    public void listen(Consumer<String> messageHandler) {
         try {
             consumer.subscribe(Collections.singleton(topic));
             while (true) {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
                 for (ConsumerRecord<String, String> record : records) {
-                    System.out.println("[" + record.topic() + "] " + record.value());
+                    messageHandler.accept(record.value());
                 }
             }
         } finally {
